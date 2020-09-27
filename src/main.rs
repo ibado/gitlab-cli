@@ -1,10 +1,10 @@
 use clap::{App, Arg, SubCommand};
 
 fn main(){
-    let matches = App::new("gitlab-cli")
+    let matches = App::new("glab")
         .version("0.1")
         .author("Ignacio Bado")
-        .about("Allow you to manage your github projects without living the terminal")
+        .about("Allow you to manage your gitlab projects without leaving the terminal")
         .subcommand(
             SubCommand::with_name("status")
                 .about("print the gitlab status")

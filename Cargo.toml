@@ -1,5 +1,5 @@
 [package]
-name = "gitlab-cli"
+name = "glab"
 version = "0.1.0"
 authors = ["ibado"]
 edition = "2018"
