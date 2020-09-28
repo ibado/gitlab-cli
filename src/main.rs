@@ -1,6 +1,8 @@
 use clap::{App, Arg, SubCommand};
 
-fn main(){
+const BASIC_URL: &str = "https://gitlab.com/api/v4/";
+
+fn main() {
     let matches = App::new("glab")
         .version("0.1")
         .author("Ignacio Bado")
@@ -21,6 +23,9 @@ fn main(){
                                 .required(true)
                         )
                 )
+                .subcommand(
+                    SubCommand::with_name("list")
+                )
         )
         .get_matches();
 
@@ -31,12 +36,32 @@ fn main(){
         if let Some(m) = m.subcommand_matches("create") {
             if m.is_present("name") {
                 let name = m.value_of("name").unwrap();
-                create_project(&name)
+                create_project(&name);
             }
+        } else if let Some(_) = m.subcommand_matches("list") {
+            list_projects()
         }
     }
 }
 
+fn list_projects() {
+    let user = std::env::var("GITLAB_USER")
+        .expect("GITLAB_USER env variable is not available");
+    let token = std::env::var("GITLAB_TOKEN")
+        .expect("GITLAB_TOKEN env variable is not available");
+    let url = &format!("{}users/{}/projects?private_token={}", BASIC_URL, user, token);
+    let resp = reqwest::blocking::get(url)
+        .unwrap()
+        .text()
+        .unwrap();
+    let json = json::parse(&resp).unwrap();
+    let len = json.len() - 1;
+    println!("projects:");
+    for i in 0..len {
+        println!("\t{}", json[i]["name"]);
+    }
+}
+
 fn create_project(name: &str) {
-    println!("creating project with name: {}...", name)
+    println!("creating project with name: {}...", name);
 }
