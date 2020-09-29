@@ -45,11 +45,13 @@ fn main() {
 }
 
 fn list_projects() {
-    let user = std::env::var("GITLAB_USER")
-        .expect("GITLAB_USER env variable is not available");
-    let token = std::env::var("GITLAB_TOKEN")
-        .expect("GITLAB_TOKEN env variable is not available");
-    let url = &format!("{}users/{}/projects?private_token={}", BASIC_URL, user, token);
+    let credentials = GitlabCredentials::get();
+    let url = &format!(
+        "{}users/{}/projects?private_token={}", 
+        BASIC_URL,
+        credentials.user_name,
+        credentials.user_token
+    );
     let resp = reqwest::blocking::get(url)
         .unwrap()
         .text()
@@ -64,4 +66,22 @@ fn list_projects() {
 
 fn create_project(name: &str) {
     println!("creating project with name: {}...", name);
+}
+
+struct GitlabCredentials {
+    user_name: String,
+    user_token: String,
+}
+
+impl GitlabCredentials {
+    pub fn get() -> Self {
+        let user_name = std::env::var("GITLAB_USER")
+            .expect("GITLAB_USER env variable is not available");
+        let user_token = std::env::var("GITLAB_TOKEN")
+            .expect("GITLAB_TOKEN env variable is not available");
+        GitlabCredentials {
+            user_name,
+            user_token,
+        }
+    }
 }
