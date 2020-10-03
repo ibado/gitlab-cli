@@ -1,33 +1,37 @@
-use clap::{App, Arg, SubCommand};
+use clap::{App, Arg};
+//use clap_generate::{generate, generators::Bash};
 
 const BASIC_URL: &str = "https://gitlab.com/api/v4/";
 
 fn main() {
-    let matches = App::new("glab")
+    let app = App::new("glab")
         .version("0.1")
         .author("Ignacio Bado")
         .about("Allow you to manage your gitlab projects without leaving the terminal")
         .subcommand(
-            SubCommand::with_name("status")
+            App::new("status")
                 .about("print the gitlab status")
         )
         .subcommand(
-            SubCommand::with_name("project")
+            App::new("project")
                 .about("create or manage existing projects")
                 .subcommand(
-                    SubCommand::with_name("create")
+                    App::new("create")
                         .arg(
-                            Arg::with_name("name")
+                            Arg::new("name")
                                 .long("name")
                                 .index(1)
                                 .required(true)
                         )
                 )
                 .subcommand(
-                    SubCommand::with_name("list")
+                    App::new("list")
                 )
-        )
-        .get_matches();
+        );
+
+    //generate::<Bash, _>(&mut app, "glab", &mut std::io::stdout());
+
+    let matches = app.get_matches();
 
     if matches.is_present("status") {
         println!("status is not yet implemented..");
@@ -75,13 +79,19 @@ struct GitlabCredentials {
 
 impl GitlabCredentials {
     pub fn get() -> Self {
-        let user_name = std::env::var("GITLAB_USER")
-            .expect("GITLAB_USER env variable is not available");
-        let user_token = std::env::var("GITLAB_TOKEN")
-            .expect("GITLAB_TOKEN env variable is not available");
+        let user_name = Self::get_env_var("GITLAB_USER");
+        let user_token = Self::get_env_var("GITLAB_TOKEN");
+
         GitlabCredentials {
             user_name,
             user_token,
         }
+    }
+
+    fn get_env_var(name: &str) -> String {
+        std::env::var(name).unwrap_or_else(|_err| {
+            eprintln!("\t{} env variable is not available\n", name);
+            std::process::exit(1);
+        })
     }
 }
