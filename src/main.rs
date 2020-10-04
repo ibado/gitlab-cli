@@ -13,10 +13,14 @@ fn main() {
                 .about("print the gitlab status")
         )
         .subcommand(
+            App::new("login").about("Interactively set Gitlab credentials")
+        )
+        .subcommand(
             App::new("project")
                 .about("create or manage existing projects")
                 .subcommand(
                     App::new("create")
+                        .about("Create a new project with the given name")
                         .arg(
                             Arg::new("name")
                                 .long("name")
@@ -25,7 +29,7 @@ fn main() {
                         )
                 )
                 .subcommand(
-                    App::new("list")
+                    App::new("list").about("List the existing projects")
                 )
         );
 
@@ -35,6 +39,9 @@ fn main() {
 
     if matches.is_present("status") {
         println!("status is not yet implemented..");
+    }
+    if matches.is_present("login") {
+        println!("\tlogin is not implemented yet");
     }
     if let Some(m) = matches.subcommand_matches("project") {
         if let Some(m) = m.subcommand_matches("create") {
@@ -90,7 +97,9 @@ impl GitlabCredentials {
 
     fn get_env_var(name: &str) -> String {
         std::env::var(name).unwrap_or_else(|_err| {
-            eprintln!("\t{} env variable is not available\n", name);
+            eprintln!("\tGITLAB_USER and/or GITLAB_TOKEN env variables are not available\n");
+            let gitlab_token_url = "https://gitlab.com/profile/personal_access_tokens";
+            eprintln!("\tTo generate a gitlab token go to: {}", gitlab_token_url);
             std::process::exit(1);
         })
     }
