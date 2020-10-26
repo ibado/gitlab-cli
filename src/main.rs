@@ -23,7 +23,6 @@ fn main() {
                         .about("Create a new project with the given name")
                         .arg(
                             Arg::new("name")
-                                .long("name")
                                 .index(1)
                                 .required(true)
                         )
@@ -77,6 +76,26 @@ fn list_projects() {
 
 fn create_project(name: &str) {
     println!("creating project with name: {}...", name);
+
+    let credentials = GitlabCredentials::get();
+    let url = &format!(
+        "{}projects?private_token={}",
+        BASIC_URL,
+        credentials.user_token
+    );
+    let mut body = std::collections::HashMap::new();
+    body.insert("name", name);
+
+    let client = reqwest::blocking::Client::new();
+    let resp = client.post(url)
+        .json(&body)
+        .send()
+        .expect("error trying to create project");
+    if resp.status().is_success() {
+        println!("project created successfully");
+    } else {
+        println!("error {} trying to create project", resp.status().as_u16());
+    }
 }
 
 struct GitlabCredentials {
