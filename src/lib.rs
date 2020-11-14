@@ -70,3 +70,18 @@ pub fn create_project(name: &str) {
         println!("error {} trying to create project", resp.status().as_u16());
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn list_projects_test() {
+        //todo!("implement this test")
+    }
+
+    #[test]
+    fn create_project_test() {
+        //todo!("implement this test")
+    }
+}
