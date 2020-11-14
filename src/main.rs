@@ -1,6 +1,11 @@
 use clap::{App, Arg};
-//use clap_generate::{generate, generators::Bash};
-use glab::{list_projects, create_project};
+
+const LOGIN: &str = "login";
+const STATUS: &str = "status";
+const PROJECT: &str = "project";
+const CREATE: &str = "create";
+const LIST: &str = "list";
+const NAME: &str = "name";
 
 fn main() {
     let app = App::new("glab")
@@ -8,47 +13,44 @@ fn main() {
         .author("Ignacio Bado")
         .about("Allow you to manage your gitlab projects without leaving the terminal")
         .subcommand(
-            App::new("status")
+            App::new(STATUS)
                 .about("print the gitlab status")
         )
         .subcommand(
-            App::new("login").about("Interactively set Gitlab credentials")
+            App::new(LOGIN)
+                .about("Interactively set Gitlab credentials")
         )
         .subcommand(
-            App::new("project")
+            App::new(PROJECT)
                 .about("create or manage existing projects")
                 .subcommand(
-                    App::new("create")
+                    App::new(CREATE)
                         .about("Create a new project with the given name")
                         .arg(
-                            Arg::new("name")
+                            Arg::new(NAME)
                                 .index(1)
                                 .required(true)
                         )
                 )
                 .subcommand(
-                    App::new("list").about("List the existing projects")
+                    App::new(LIST).about("List the existing projects")
                 )
         );
 
-    //generate::<Bash, _>(&mut app, "glab", &mut std::io::stdout());
-
     let matches = app.get_matches();
 
-    if matches.is_present("status") {
+    if matches.is_present(STATUS) {
         println!("status is not yet implemented..");
-    }
-    if matches.is_present("login") {
+    } else if matches.is_present(LOGIN) {
         println!("\tlogin is not implemented yet");
-    }
-    if let Some(m) = matches.subcommand_matches("project") {
-        if let Some(m) = m.subcommand_matches("create") {
-            if m.is_present("name") {
-                let name = m.value_of("name").unwrap();
-                create_project(&name);
+    } else if let Some(m) = matches.subcommand_matches(PROJECT) {
+        if let Some(m) = m.subcommand_matches(CREATE) {
+            if m.is_present(NAME) {
+                let name = m.value_of(NAME).unwrap();
+                glab::create_project(&name);
             }
-        } else if let Some(_) = m.subcommand_matches("list") {
-            list_projects()
+        } else if let Some(_) = m.subcommand_matches(LIST) {
+            glab::list_projects()
         }
     }
 }
