@@ -10,9 +10,12 @@ const NAME: &str = "name";
 fn main() {
     let matches = get_matches();
     if matches.is_present(STATUS) {
-        println!("status is not yet implemented..");
+        println!("status is not implemented yet..");
     } else if matches.is_present(LOGIN) {
-        println!("\tlogin is not implemented yet");
+        let result = glab::login();
+        if result.is_err() {
+            print!("Error: {}", result.err().unwrap().to_string());
+        }
     } else if let Some(project) = matches.subcommand_matches(PROJECT) {
         if let Some(create) = project.subcommand_matches(CREATE) {
             if create.is_present(NAME) {
