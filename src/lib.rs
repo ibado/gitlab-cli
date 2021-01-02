@@ -130,18 +130,3 @@ fn config_file_name() -> String {
     let home = std::env::var("HOME").unwrap();
     home + "/.glab"
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn list_projects_test() {
-        //todo!("implement this test")
-    }
-
-    #[test]
-    fn create_project_test() {
-        //todo!("implement this test")
-    }
-}
