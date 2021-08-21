@@ -105,9 +105,11 @@ pub fn login() -> Result<(), std::io::Error> {
 fn load_config() {
     let file = OpenOptions::new()
         .read(true)
-        .open(config_file_name())
-        .unwrap();
-    let lines = std::io::BufReader::new(file).lines();
+        .open(config_file_name());
+
+    if file.is_err() { return (); }
+
+    let lines = std::io::BufReader::new(file.unwrap()).lines();
     for line in lines {
         if let Ok(config) = line {
             let words: Vec<_> = config.split("=").collect();

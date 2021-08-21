@@ -31,7 +31,6 @@ enum SubCommand {
     Status,
     Login,
     Project(ProjectCommand),
-
 }
 
 #[derive(Clap)]
