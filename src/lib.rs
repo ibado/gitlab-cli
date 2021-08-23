@@ -1,5 +1,6 @@
 use std::io::{Write, BufRead};
 use std::fs::OpenOptions;
+use std::error::Error;
 
 const BASIC_URL: &str = "https://gitlab.com/api/v4/";
 const GITLAB_USER_KEY: &str = "GITLAB_USER";
@@ -11,30 +12,22 @@ struct GitlabCredentials {
 }
 
 impl GitlabCredentials {
-    pub fn get() -> Self {
+    pub fn get() -> Result<Self, Box<dyn Error>> {
         load_config();
-        let user_name = Self::get_env_var(GITLAB_USER_KEY);
-        let user_token = Self::get_env_var(GITLAB_TOKEN_KEY);
+        let user_name = std::env::var(GITLAB_USER_KEY)?;
+        let user_token = std::env::var(GITLAB_TOKEN_KEY)?;
 
-        GitlabCredentials {
-            user_name,
-            user_token,
-        }
-    }
-
-    fn get_env_var(name: &str) -> String {
-        std::env::var(name).unwrap_or_else(|_| {
-            eprintln!("\tGITLAB_USER and/or GITLAB_TOKEN env variables are not set\n");
-            println!("\tYou can use 'glab login' command or set them manually");
-            let gitlab_token_url = "https://gitlab.com/profile/personal_access_tokens";
-            println!("\tTo generate a gitlab token go to: {}", gitlab_token_url);
-            std::process::exit(1);
-        })
+        Result::Ok(
+            GitlabCredentials {
+                user_name,
+                user_token,
+            }
+        )
     }
 }
 
 pub fn list_projects() {
-    let credentials = GitlabCredentials::get();
+    let credentials = get_credentianls();
     let url = &format!(
         "{}users/{}/projects?private_token={}",
         BASIC_URL,
@@ -64,7 +57,7 @@ pub fn list_projects() {
 pub fn create_project(name: &str) {
     println!("creating project with name: {}...", name);
 
-    let credentials = GitlabCredentials::get();
+    let credentials = get_credentianls();
     let url = &format!(
         "{}projects?private_token={}",
         BASIC_URL,
@@ -100,6 +93,19 @@ pub fn login() -> Result<(), std::io::Error> {
 
     println!("\tLogin successfully!");
     Ok(())
+}
+
+fn get_credentianls() -> GitlabCredentials {
+    match GitlabCredentials::get() {
+        Ok(credentials) => credentials,
+        Err(_) => {
+            eprintln!("\tGITLAB_USER and/or GITLAB_TOKEN env variables are not set\n");
+            println!("\tYou can use 'glab login' command or set them manually");
+            let gitlab_token_url = "https://gitlab.com/profile/personal_access_tokens";
+            println!("\tTo generate a gitlab token go to: {}", gitlab_token_url);
+            std::process::exit(1);
+        }
+    }
 }
 
 fn load_config() {
