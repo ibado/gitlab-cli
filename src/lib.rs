@@ -21,7 +21,32 @@ pub fn list_projects() {
         let len = json.len();
         println!("projects:");
         for i in 0..len {
-            println!("\t{}", json[i]["name"]);
+            println!("\t{} - Id({})", json[i]["name"], json[i]["id"]);
+        }
+    } else {
+        let code = status.as_u16();
+        let error = status.canonical_reason().unwrap();
+        println!("\t{}: {}", code, error);
+        if code == 401 {
+            println!("\tYour token is not valid");
+        }
+    }
+}
+
+pub fn list_groups() {
+    let credentials = get_credentianls();
+    let url = &format!(
+        "{}groups?private_token={}&simple=true", BASE_URL, credentials.user_token
+    );
+    let resp = reqwest::blocking::get(url).unwrap();
+    let status = resp.status();
+    if status.is_success() {
+        let text_response = &resp.text().unwrap();
+        let json = json::parse(text_response).unwrap();
+        let len = json.len();
+        println!("groups:");
+        for i in 0..len {
+            println!("\t{} - Id({})", json[i]["full_name"], json[i]["id"]);
         }
     } else {
         let code = status.as_u16();

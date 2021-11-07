@@ -16,6 +16,9 @@ fn main() {
             ProjectCommand::Create(arg) => glab::create_project(&arg.name),
             ProjectCommand::List => glab::list_projects(),
         },
+        SubCommand::Group(cmd) => match cmd {
+            GroupCommand::List => glab::list_groups(),
+        }
     };
 }
 
@@ -31,11 +34,17 @@ enum SubCommand {
     Status,
     Login,
     Project(ProjectCommand),
+    Group(GroupCommand),
 }
 
 #[derive(Clap)]
 enum ProjectCommand {
     Create(CreateCmd),
+    List,
+}
+
+#[derive(Clap)]
+enum GroupCommand {
     List,
 }
 
