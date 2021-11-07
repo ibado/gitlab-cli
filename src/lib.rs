@@ -1,36 +1,15 @@
-use std::io::{Write, BufRead};
-use std::fs::OpenOptions;
-use std::error::Error;
+mod credentials;
+mod config;
 
-const BASIC_URL: &str = "https://gitlab.com/api/v4/";
-const GITLAB_USER_KEY: &str = "GITLAB_USER";
-const GITLAB_TOKEN_KEY: &str = "GITLAB_TOKEN";
+use crate::credentials::{GitlabCredentials, write_credentials};
 
-struct GitlabCredentials {
-    pub user_name: String,
-    pub user_token: String,
-}
-
-impl GitlabCredentials {
-    pub fn get() -> Result<Self, Box<dyn Error>> {
-        load_config();
-        let user_name = std::env::var(GITLAB_USER_KEY)?;
-        let user_token = std::env::var(GITLAB_TOKEN_KEY)?;
-
-        Result::Ok(
-            GitlabCredentials {
-                user_name,
-                user_token,
-            }
-        )
-    }
-}
+const BASE_URL: &str = "https://gitlab.com/api/v4/";
 
 pub fn list_projects() {
     let credentials = get_credentianls();
     let url = &format!(
         "{}users/{}/projects?private_token={}",
-        BASIC_URL,
+        BASE_URL,
         credentials.user_name,
         credentials.user_token
     );
@@ -55,12 +34,12 @@ pub fn list_projects() {
 }
 
 pub fn create_project(name: &str) {
-    println!("creating project with name: {}...", name);
-
     let credentials = get_credentianls();
+
+    println!("creating project with name: {}...", name);
     let url = &format!(
         "{}projects?private_token={}",
-        BASIC_URL,
+        BASE_URL,
         credentials.user_token
     );
     let mut body = std::collections::HashMap::new();
@@ -83,13 +62,13 @@ pub fn login() -> Result<(), std::io::Error> {
     let mut gitlab_user = String::new();
     std::io::stdin().read_line(&mut gitlab_user)?;
     let user = gitlab_user.replace("\n", "");
-    write_config(GITLAB_USER_KEY.to_string(), user)?;
 
     println!("\tGitlab token: ");
     let mut gitlab_token = String::new();
     std::io::stdin().read_line(&mut gitlab_token)?;
     let token = String::from(gitlab_token.replace("\n", ""));
-    write_config(GITLAB_TOKEN_KEY.to_string(), token)?;
+
+    write_credentials(GitlabCredentials {user_name: user, user_token: token})?;
 
     println!("\tLogin successfully!");
     Ok(())
@@ -106,35 +85,4 @@ fn get_credentianls() -> GitlabCredentials {
             std::process::exit(1);
         }
     }
-}
-
-fn load_config() {
-    let file = OpenOptions::new()
-        .read(true)
-        .open(config_file_name());
-
-    if file.is_err() { return (); }
-
-    let lines = std::io::BufReader::new(file.unwrap()).lines();
-    for line in lines {
-        if let Ok(config) = line {
-            let words: Vec<_> = config.split("=").collect();
-            std::env::set_var(words[0], words[1])
-        }
-    }
-}
-
-fn write_config(key: String, value: String) -> Result<(), std::io::Error> {
-    let file = std::fs::OpenOptions::new()
-        .write(true)
-        .create(true)
-        .append(true)
-        .open(config_file_name())
-        .unwrap();
-    return writeln!(&file, "{}={}", key, value);
-}
-
-fn config_file_name() -> String {
-    let home = std::env::var("HOME").unwrap();
-    home + "/.glab"
 }
