@@ -8,7 +8,7 @@ const BASE_URL: &str = "https://gitlab.com/api/v4/";
 pub fn list_projects() {
     let credentials = get_credentianls();
     let url = &format!(
-        "{}users/{}/projects?private_token={}",
+        "{}users/{}/projects?private_token={}&simple=true",
         BASE_URL,
         credentials.user_name,
         credentials.user_token
