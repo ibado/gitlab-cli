@@ -18,7 +18,7 @@ pub fn list_projects() {
     if status.is_success() {
         let text_response = &resp.text().unwrap();
         let json = json::parse(text_response).unwrap();
-        let len = json.len() - 1;
+        let len = json.len();
         println!("projects:");
         for i in 0..len {
             println!("\t{}", json[i]["name"]);
