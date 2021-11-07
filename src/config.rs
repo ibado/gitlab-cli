@@ -1,5 +1,5 @@
 use std::io::{Write, BufRead, Error};
-use std::fs::OpenOptions;
+use std::fs::{OpenOptions, remove_file};
 
 pub fn load_config() {
     let file = OpenOptions::new()
@@ -25,6 +25,12 @@ pub fn write_config(key: String, value: String) -> Result<(), Error> {
         .open(config_file_name())
         .unwrap();
     return writeln!(&file, "{}={}", key, value);
+}
+
+pub fn clear_config() -> Result<(), Error> {
+    let result = remove_file(config_file_name());
+    if result.is_err() { /* config file is not created */ }
+    Ok(())
 }
 
 fn config_file_name() -> String {

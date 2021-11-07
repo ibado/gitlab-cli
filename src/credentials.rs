@@ -1,5 +1,5 @@
 use std::error::Error;
-use crate::config::{load_config, write_config};
+use crate::config::{load_config, write_config, clear_config};
 
 pub const GITLAB_USER_KEY: &str = "GITLAB_USER";
 pub const GITLAB_TOKEN_KEY: &str = "GITLAB_TOKEN";
@@ -25,6 +25,7 @@ impl GitlabCredentials {
 }
 
 pub fn write_credentials(credentials: GitlabCredentials) -> Result<(), std::io::Error> {
+    clear_config()?;
     write_config(GITLAB_USER_KEY.to_string(), credentials.user_name)?;
     write_config(GITLAB_TOKEN_KEY.to_string(), credentials.user_token)?;
     Ok(())
