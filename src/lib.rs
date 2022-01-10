@@ -1,5 +1,6 @@
 mod credentials;
 mod config;
+mod http;
 
 use crate::credentials::{GitlabCredentials, write_credentials};
 
