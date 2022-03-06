@@ -1,62 +1,36 @@
 mod credentials;
 mod config;
-mod http;
+mod gitlab;
 
 use crate::credentials::{GitlabCredentials, write_credentials};
-
-const BASE_URL: &str = "https://gitlab.com/api/v4/";
+use crate::gitlab::GitlabRepo;
 
 pub fn list_projects() {
-    let credentials = get_credentianls();
-    let url = &format!(
-        "{}users/{}/projects?private_token={}&simple=true",
-        BASE_URL,
-        credentials.user_name,
-        credentials.user_token
-    );
-    let resp = reqwest::blocking::get(url).unwrap();
-    let status = resp.status();
-    if status.is_success() {
-        let text_response = &resp.text().unwrap();
-        let json = json::parse(text_response).unwrap();
-        let len = json.len();
-        println!("projects:");
-        for i in 0..len {
-            println!("\t{} - Id({})", json[i]["name"], json[i]["id"]);
-        }
-    } else {
-        let code = status.as_u16();
-        let error = status.canonical_reason().unwrap();
-        println!("\t{}: {}", code, error);
-        if code == 401 {
-            println!("\tYour token is not valid");
-        }
+    let projects = gitlab_repo().get_projects();
+
+    match projects {
+        Ok(project_list) => {
+            println!("projects:");
+            for i in project_list {
+                println!("\t{} - Id({})", i.name, i.id);
+            }
+        },
+        Err(message) => println!("{}", message)
     }
 }
 
 pub fn list_groups() {
-    let credentials = get_credentianls();
-    let url = &format!(
-        "{}groups?private_token={}&simple=true", BASE_URL, credentials.user_token
-    );
-    let resp = reqwest::blocking::get(url).unwrap();
-    let status = resp.status();
-    if status.is_success() {
-        let text_response = &resp.text().unwrap();
-        let json = json::parse(text_response).unwrap();
-        let len = json.len();
-        println!("groups:");
-        for i in 0..len {
-            println!("\t{} - Id({})", json[i]["full_name"], json[i]["id"]);
-        }
-    } else {
-        let code = status.as_u16();
-        let error = status.canonical_reason().unwrap();
-        println!("\t{}: {}", code, error);
-        if code == 401 {
-            println!("\tYour token is not valid");
-        }
-    }
+    let groups = gitlab_repo().get_groups();
+
+    match groups {
+        Ok(group_list) => {
+            println!("groups:");
+            for i in group_list {
+                println!("\t{} - Id({})", i.name, i.id);
+            }
+        },
+        Err(message) => println!("{}", message)
+    } 
 }
 
 pub fn create_project(name: &str) {
@@ -64,8 +38,7 @@ pub fn create_project(name: &str) {
 
     println!("creating project with name: {}...", name);
     let url = &format!(
-        "{}projects?private_token={}",
-        BASE_URL,
+        "https://gitlab.com/api/v4/projects?private_token={}",
         credentials.user_token
     );
     let mut body = std::collections::HashMap::new();
@@ -98,6 +71,11 @@ pub fn login() -> Result<(), std::io::Error> {
 
     println!("\tLogin successfully!");
     Ok(())
+}
+
+fn gitlab_repo() -> GitlabRepo {
+    let credentials = get_credentianls();
+    return GitlabRepo::new(credentials);
 }
 
 fn get_credentianls() -> GitlabCredentials {
