@@ -30,29 +30,15 @@ pub fn list_groups() {
             }
         },
         Err(message) => println!("{}", message)
-    } 
+    }
 }
 
 pub fn create_project(name: &str) {
-    let credentials = get_credentianls();
-
     println!("creating project with name: {}...", name);
-    let url = &format!(
-        "https://gitlab.com/api/v4/projects?private_token={}",
-        credentials.user_token
-    );
-    let mut body = std::collections::HashMap::new();
-    body.insert("name", name);
 
-    let client = reqwest::blocking::Client::new();
-    let resp = client.post(url)
-        .json(&body)
-        .send()
-        .expect("error trying to create project");
-    if resp.status().is_success() {
-        println!("project created successfully");
-    } else {
-        println!("error {} trying to create project", resp.status().as_u16());
+    match gitlab_repo().post_project(name) {
+        Ok(id) => println!("\tproject created successfully with Id {}", id),
+        Err(msg) => println!("\terror trying to create project: {}", msg)
     }
 }
 

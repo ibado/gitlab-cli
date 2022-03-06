@@ -81,6 +81,28 @@ impl GitlabRepo {
         }
     }
 
+    pub fn post_project(&self, name: &str) -> Result<String, ErrorMessage> {
+        let url = &format!(
+            "{}projects?private_token={}",
+            BASE_URL,
+            self.credentials.user_token
+        );
+        let mut body = std::collections::HashMap::new();
+        body.insert("name", name);
+
+        let client = reqwest::blocking::Client::new();
+        let resp = client.post(url)
+            .json(&body)
+            .send()
+            .expect("error trying to create project");
+        if resp.status().is_success() {
+            let json = json::parse(&resp.text().unwrap()).unwrap();
+            Ok(format!("{}", json["id"]))
+        } else {
+            Err(self.get_error_msg(resp.status()))
+        }
+    }
+
     fn get_error_msg(&self, status: reqwest::StatusCode) -> String {
         let code = status.as_u16();
         let error = status.canonical_reason().unwrap();
