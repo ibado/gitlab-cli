@@ -36,18 +36,18 @@ impl GitlabRepo {
         if status.is_success() {
             let text_response = &resp.text().unwrap();
             let json = json::parse(text_response).unwrap();
-            match json {
-                json::JsonValue::Array(list) => {
-                    let result: Vec<_> = list.iter().map(|project| {
-                        Project {
-                            id: format!("{}", project["id"]).parse::<u64>().unwrap(),
-                            name: format!("{}", project["name"])
-                        }
-                    }).collect();
-                    Ok(result)
-                },
-                _ => Err(String::from("api error"))
+
+            if let json::JsonValue::Array(list) = json {
+                let result: Vec<_> = list.iter().map(|project| {
+                    let id = format!("{}", project["id"]).parse::<u64>().unwrap();
+                    let name = format!("{}", project["name"]);
+                    Project { id, name }
+                }).collect();
+
+                return Ok(result);
             }
+
+            Err(String::from("api error"))
         } else {
             Err(self.get_error_msg(status))
         }
@@ -64,18 +64,18 @@ impl GitlabRepo {
         if status.is_success() {
             let text_response = &resp.text().unwrap();
             let json = json::parse(text_response).unwrap();
-            match json {
-                json::JsonValue::Array(list) => {
-                    let result: Vec<_> = list.iter().map(|group| {
-                        Group {
-                            id: format!("{}", group["id"]).parse::<u64>().unwrap(),
-                            name: format!("{}", group["full_name"])
-                        }
-                    }).collect();
-                    Ok(result)
-                },
-                _ => Err(String::from("api error"))
+
+            if let json::JsonValue::Array(list) = json {
+                let result: Vec<_> = list.iter().map(|group| {
+                    let id =  format!("{}", group["id"]).parse::<u64>().unwrap();
+                    let name = format!("{}", group["full_name"]);
+                    Group { id, name }
+                }).collect();
+
+                return Ok(result);
             }
+
+            Err(String::from("api error"))
         } else {
             Err(self.get_error_msg(status))
         }
