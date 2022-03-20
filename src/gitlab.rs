@@ -33,24 +33,23 @@ impl GitlabRepo {
         let resp = reqwest::blocking::get(url).unwrap();
         let status = resp.status();
 
-        if status.is_success() {
-            let text_response = &resp.text().unwrap();
-            let json = json::parse(text_response).unwrap();
-
-            if let json::JsonValue::Array(list) = json {
-                let result: Vec<_> = list.iter().map(|project| {
-                    let id = format!("{}", project["id"]).parse::<u64>().unwrap();
-                    let name = format!("{}", project["name"]);
-                    Project { id, name }
-                }).collect();
-
-                return Ok(result);
-            }
-
-            Err(String::from("api error"))
-        } else {
-            Err(self.get_error_msg(status))
+        if !status.is_success() {
+            return Err(self.get_error_msg(status));
         }
+
+        let text_response = &resp.text().unwrap();
+        let json = json::parse(text_response).unwrap();
+
+        let mut result = vec![];
+        if let json::JsonValue::Array(list) = json {
+            result = list.iter().map(|project| {
+                let id = format!("{}", project["id"]).parse::<u64>().unwrap();
+                let name = format!("{}", project["name"]);
+                Project { id, name }
+            }).collect();
+        }
+
+        return Ok(result);
     }
 
     pub fn get_groups(&self) -> Result<Vec<Group>, String> {
@@ -61,24 +60,24 @@ impl GitlabRepo {
         );
         let resp = reqwest::blocking::get(url).unwrap();
         let status = resp.status();
-        if status.is_success() {
-            let text_response = &resp.text().unwrap();
-            let json = json::parse(text_response).unwrap();
 
-            if let json::JsonValue::Array(list) = json {
-                let result: Vec<_> = list.iter().map(|group| {
-                    let id =  format!("{}", group["id"]).parse::<u64>().unwrap();
-                    let name = format!("{}", group["full_name"]);
-                    Group { id, name }
-                }).collect();
-
-                return Ok(result);
-            }
-
-            Err(String::from("api error"))
-        } else {
-            Err(self.get_error_msg(status))
+        if !status.is_success() {
+            return Err(self.get_error_msg(status));
         }
+
+        let text_response = &resp.text().unwrap();
+        let json = json::parse(text_response).unwrap();
+
+        let mut result = vec![];
+        if let json::JsonValue::Array(list) = json {
+            result = list.iter().map(|group| {
+                let id =  format!("{}", group["id"]).parse::<u64>().unwrap();
+                let name = format!("{}", group["full_name"]);
+                Group { id, name }
+            }).collect();
+        }
+
+        return Ok(result);
     }
 
     pub fn post_project(&self, name: &str) -> Result<String, ErrorMessage> {
