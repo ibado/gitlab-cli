@@ -1,4 +1,5 @@
 use crate::credentials::GitlabCredentials;
+use reqwest::blocking::Response;
 
 const BASE_URL: &str = "https://gitlab.com/api/v4/";
 
@@ -31,26 +32,9 @@ impl GitlabRepo {
             self.credentials.user_token
         );
         let resp = reqwest::blocking::get(url).unwrap();
-        let status = resp.status();
-
-        if !status.is_success() {
-            return Err(self.get_error_msg(status));
-        }
-
-        let text_response = &resp.text().unwrap();
-        let json = json::parse(text_response).unwrap();
-
-        let mut result = vec![];
-        if let json::JsonValue::Array(list) = json {
-            result = list.iter().map(|project| {
-                let id = format!("{}", project["id"]).parse::<u64>().unwrap();
-                let name = format!("{}", project["name"]);
-                Project { id, name }
-            }).collect();
-        }
-
-        return Ok(result);
-    }
+        
+        return self.process_project_response(resp);
+    }  
 
     pub fn get_groups(&self) -> Result<Vec<Group>, String> {
         let url = &format!(
@@ -80,6 +64,18 @@ impl GitlabRepo {
         return Ok(result);
     }
 
+    pub fn get_group_projects(&self, group_id: &str) -> Result<Vec<Project>, ErrorMessage> {
+        let url = &format!(
+            "{}groups/{}/projects?private_token={}&simple=true",
+            BASE_URL,
+            group_id,
+            self.credentials.user_token
+        );
+        let resp = reqwest::blocking::get(url).unwrap();
+
+        return self.process_project_response(resp);
+    }
+
     pub fn post_project(&self, name: &str) -> Result<String, ErrorMessage> {
         let url = &format!(
             "{}projects?private_token={}",
@@ -100,6 +96,28 @@ impl GitlabRepo {
         } else {
             Err(self.get_error_msg(resp.status()))
         }
+    }
+
+    fn process_project_response(&self, resp: Response) -> Result<Vec<Project>, ErrorMessage> {
+        let status = resp.status();
+
+        if !status.is_success() {
+            return Err(self.get_error_msg(status));
+        }
+
+        let text_response = &resp.text().unwrap();
+        let json = json::parse(text_response).unwrap();
+
+        let mut result = vec![];
+        if let json::JsonValue::Array(list) = json {
+            result = list.iter().map(|project| {
+                let id = format!("{}", project["id"]).parse::<u64>().unwrap();
+                let name = format!("{}", project["name"]);
+                Project { id, name }
+            }).collect();
+        }
+
+        return Ok(result);
     }
 
     fn get_error_msg(&self, status: reqwest::StatusCode) -> String {

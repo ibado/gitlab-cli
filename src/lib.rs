@@ -4,19 +4,12 @@ mod gitlab;
 
 use crate::credentials::{GitlabCredentials, write_credentials};
 use crate::gitlab::GitlabRepo;
+use crate::gitlab::Project;
 
 pub fn list_projects() {
     let projects = gitlab_repo().get_projects();
 
-    match projects {
-        Ok(project_list) => {
-            println!("projects:");
-            for i in project_list {
-                println!("\t{} - Id({})", i.name, i.id);
-            }
-        },
-        Err(message) => println!("{}", message)
-    }
+    print_projects(projects);
 }
 
 pub fn list_groups() {
@@ -31,6 +24,12 @@ pub fn list_groups() {
         },
         Err(message) => println!("{}", message)
     }
+}
+
+pub fn list_group_projects(group_id: &str) {
+    let group_projects = gitlab_repo().get_group_projects(group_id);
+    print_projects(group_projects);
+
 }
 
 pub fn create_project(name: &str) {
@@ -57,6 +56,18 @@ pub fn login() -> Result<(), std::io::Error> {
 
     println!("\tLogin successfully!");
     Ok(())
+}
+
+fn print_projects(projects: Result<Vec<Project>, String>) {
+    match projects {
+        Ok(project_list) => {
+            println!("Projects:");
+            for i in project_list {
+                println!("\t{} - Id({})", i.name, i.id);
+            }
+        },
+        Err(message) => println!("{}", message)
+    }
 }
 
 fn gitlab_repo() -> GitlabRepo {

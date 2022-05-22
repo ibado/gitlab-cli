@@ -18,6 +18,7 @@ fn main() {
         },
         SubCommand::Group(cmd) => match cmd {
             GroupCommand::List => glab::list_groups(),
+            GroupCommand::Projects(arg) => glab::list_group_projects(&arg.group_id)
         }
     };
 }
@@ -46,6 +47,12 @@ enum ProjectCommand {
 #[derive(Clap)]
 enum GroupCommand {
     List,
+    Projects(GroupListCmd),
+}
+
+#[derive(Clap)]
+struct GroupListCmd {
+    group_id: String,
 }
 
 #[derive(Clap)]
